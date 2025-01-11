@@ -1,4 +1,4 @@
-import Calendar from "../features/calendar/Calendar";
+import Calendar from "../features/calendar/ui/Calendar";
 
 export const CalendarPage: React.FC = () => {
   return (

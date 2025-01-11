@@ -2,9 +2,12 @@ import styled from "styled-components";
 
 export const TaskList = styled.div`
   width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 5px;
+  margin-top: 1.5rem;
+  overflow-y: auto;
 `;
 
 export const TaskInput = styled.input`
@@ -39,8 +42,18 @@ export const TaskButton = styled.button`
 
 export const TaskItem = styled.div`
   width: 90%;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
   background: #f9f9f9;
   margin: 0 auto;
   padding: 5px;
   word-break: break-word;
+`;
+
+export const UsersTaskList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 `;
