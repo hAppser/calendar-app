@@ -1,42 +1,103 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useTaskDB } from "./useTaskDB";
 
 export type TTask = { id: string; text: string };
 
 export const useTasks = () => {
+  const { getAllTasksDB, saveTaskDB, deleteTaskDB } = useTaskDB();
   const [tasks, setTasks] = useState<Record<string, TTask[]>>({});
+  useEffect(() => {
+    const fetchTasks = async () => {
+      const allTasks = await getAllTasksDB();
+      const groupedTasks = groupTasksByDay(allTasks);
+      setTasks(groupedTasks);
+    };
+    fetchTasks();
+  }, []);
 
-  const addTask = (day: string, task: TTask) => {
-    setTasks((prev) => ({
-      ...prev,
-      [day]: [...(prev[day] || []), task],
-    }));
+  const groupTasksByDay = (
+    allDays: { dayKey: string; tasks: TTask[] }[]
+  ): Record<string, TTask[]> => {
+    return allDays.reduce((acc, day) => {
+      acc[day.dayKey] = day.tasks;
+      return acc;
+    }, {} as Record<string, TTask[]>);
   };
 
-  const editTask = (day: string, taskId: string, newText: string) => {
-    setTasks((prev) => ({
-      ...prev,
-      [day]: prev[day].map((task) =>
-        task.id === taskId ? { ...task, text: newText } : task
-      ),
-    }));
+  const addTask = (dayKey: string, task: TTask) => {
+    setTasks((prev) => {
+      const updatedTasks = { ...prev };
+      if (!updatedTasks[dayKey]) {
+        updatedTasks[dayKey] = [];
+      }
+      const isDuplicate = updatedTasks[dayKey].some((t) => t.id === task.id);
+
+      if (!isDuplicate) {
+        updatedTasks[dayKey].push(task);
+      }
+
+      saveTaskDB(dayKey, task);
+      return updatedTasks;
+    });
   };
 
-  const deleteTask = (day: string, taskId: string) => {
-    setTasks((prev) => ({
-      ...prev,
-      [day]: prev[day].filter((task) => task.id !== taskId),
-    }));
+  const editTask = (taskId: string, newText: string) => {
+    setTasks((prev) => {
+      const updatedTasks = { ...prev };
+      for (const dayKey in updatedTasks) {
+        const dayTasks = updatedTasks[dayKey];
+        const taskIndex = dayTasks.findIndex((task) => task.id === taskId);
+        if (taskIndex !== -1) {
+          dayTasks[taskIndex].text = newText;
+          saveTaskDB(dayKey, dayTasks[taskIndex]);
+          break;
+        }
+      }
+      return updatedTasks;
+    });
   };
 
-  const moveTask = (fromDay: string, toDay: string, taskId: string) => {
-    const taskToMove = tasks[fromDay]?.find((task) => task.id === taskId);
-    if (!taskToMove) return;
+  const deleteTask = (taskId: string) => {
+    setTasks((prev) => {
+      const updatedTasks = { ...prev };
+      for (const dayKey in updatedTasks) {
+        const dayTasks = updatedTasks[dayKey];
+        const taskIndex = dayTasks.findIndex((task) => task.id === taskId);
+        if (taskIndex !== -1) {
+          dayTasks.splice(taskIndex, 1);
+          deleteTaskDB(dayKey, taskId);
+          break;
+        }
+      }
+      return updatedTasks;
+    });
+  };
 
-    setTasks((prev) => ({
-      ...prev,
-      [fromDay]: prev[fromDay].filter((task) => task.id !== taskId),
-      [toDay]: [...(prev[toDay] || []), taskToMove],
-    }));
+  const moveTask = (
+    taskId: string,
+    sourceDayKey: string,
+    destinationDayKey: string
+  ) => {
+    setTasks((prev) => {
+      const updatedTasks = { ...prev };
+
+      const sourceTasks = updatedTasks[sourceDayKey] || [];
+      const [taskToMove] = sourceTasks.splice(
+        sourceTasks.findIndex((task) => task.id === taskId),
+        1
+      );
+      updatedTasks[sourceDayKey] = sourceTasks;
+
+      if (!updatedTasks[destinationDayKey]) {
+        updatedTasks[destinationDayKey] = [];
+      }
+      updatedTasks[destinationDayKey].push(taskToMove);
+
+      deleteTaskDB(sourceDayKey, taskId);
+      saveTaskDB(destinationDayKey, taskToMove);
+
+      return updatedTasks;
+    });
   };
 
   return { tasks, addTask, editTask, deleteTask, moveTask };

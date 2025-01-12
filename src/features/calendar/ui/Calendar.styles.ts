@@ -53,7 +53,6 @@ export const Day = styled.div<{ isEmpty: boolean; isInactive: boolean }>`
   border-radius: 4px;
 
   opacity: ${({ isInactive }) => (isInactive ? 0.5 : 1)};
-  pointer-events: ${({ isInactive }) => (isInactive ? "none" : "auto")};
 `;
 
 export const DayNumber = styled.div`
@@ -61,4 +60,15 @@ export const DayNumber = styled.div`
   top: 1px;
   left: 1px;
   padding: 2px;
+`;
+
+export const SearchBar = styled.div`
+  margin-bottom: 16px;
+  input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+  }
 `;

@@ -54,5 +54,5 @@ export const getDayInfo = (day: Date) => {
   const isCurrentMonth =
     day.getMonth() >= currentMonth && day.getFullYear() >= currentYear;
 
-  return { isMonthFirstOrLastDay, isCurrentMonth, month, currrentDay: dateDay };
+  return { isMonthFirstOrLastDay, isCurrentMonth, month, currentDay: dateDay };
 };
